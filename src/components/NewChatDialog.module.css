@@ -1,0 +1,44 @@
+.dialog {
+  width: min(400px, calc(100vw - 2 * var(--spacing-size2xl)));
+  padding: 0;
+  border: none;
+  border-radius: var(--size-border-radius-semantic-border-radius-promo);
+  background: var(--background-primary);
+  color: var(--text-primary);
+  font-family: var(--family-base);
+}
+
+.dialog::backdrop {
+  background: var(--background-overlay);
+}
+
+.dialog[open] {
+  animation: pop 0.15s ease-out;
+}
+
+@keyframes pop {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dialog[open] {
+    animation: none;
+  }
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-size2xl);
+  padding: var(--spacing-size3xl) var(--spacing-size4xl) var(--spacing-size4xl);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-right: calc(-1 * var(--spacing-size-m));
+}

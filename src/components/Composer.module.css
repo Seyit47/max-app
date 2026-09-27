@@ -1,0 +1,46 @@
+.composer {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--spacing-size-m);
+  max-width: 800px;
+  width: 100%;
+  margin: 0 auto;
+  box-sizing: border-box;
+  padding: var(--spacing-size-m) var(--spacing-size2xl) var(--spacing-size-xl);
+}
+
+.field {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  border-radius: var(--size-border-radius-button-large);
+  background: var(--background-card);
+}
+
+.textarea {
+  /* one line = 40px total, max ~6 lines */
+  min-height: 40px;
+  max-height: calc(6 * var(--line-height-body) + 20px);
+  padding: 10px var(--spacing-size2xl);
+  overflow-y: auto;
+  font-size: var(--font-size-detail);
+  line-height: var(--line-height-body);
+}
+
+.send {
+  flex-shrink: 0;
+  transition:
+    transform 0.15s ease,
+    opacity 0.15s ease;
+}
+
+.send:not([data-active]) {
+  opacity: 0.5;
+  transform: scale(0.85);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .send {
+    transition: none;
+  }
+}

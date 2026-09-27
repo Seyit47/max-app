@@ -1,0 +1,165 @@
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-size2xl);
+}
+
+.country,
+.countryRow,
+.back {
+  all: unset;
+  box-sizing: border-box;
+  cursor: pointer;
+}
+
+.country:focus-visible,
+.countryRow:focus-visible,
+.back:focus-visible {
+  outline: 2px solid var(--controls-active);
+  outline-offset: -2px;
+}
+
+.country {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-size-xl);
+  height: 52px;
+  padding: 0 var(--spacing-size-xl);
+  border-radius: var(--size-border-radius-action-large);
+  background: var(--background-tertiary);
+  color: var(--text-primary);
+  font-size: var(--font-size-body);
+  line-height: var(--line-height-body);
+}
+
+.country:hover {
+  background: color-mix(in srgb, var(--background-tertiary), var(--states-background-hovered-transparent));
+}
+
+.flag {
+  font-size: 22px;
+  line-height: 1;
+  width: 24px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.countryName {
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* The back arrow, turned into a "more" chevron. */
+.chevron {
+  color: var(--icon-tertiary);
+  transform: rotate(180deg);
+}
+
+.dialCode {
+  color: var(--text-primary);
+  font-size: var(--font-size-body);
+  line-height: var(--line-height-body);
+  white-space: nowrap;
+}
+
+.error {
+  margin-top: calc(-1 * var(--spacing-size-xl));
+  padding: 0 var(--spacing-size-xl);
+  color: var(--text-negative);
+  font-size: var(--font-size-description);
+  line-height: var(--line-height-description);
+}
+
+.actions {
+  display: flex;
+  gap: var(--spacing-size-m);
+}
+
+/* Country picker */
+
+.picker {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-size-xl);
+}
+
+.pickerHead {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-size-s);
+  margin-left: calc(-1 * var(--spacing-size-s));
+}
+
+.back {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--border-radius-circle);
+  color: var(--icon-primary);
+}
+
+.back:hover {
+  background: var(--states-background-hovered-transparent);
+}
+
+.pickerTitle {
+  font-size: var(--font-size-detail);
+  line-height: var(--line-height-detail);
+  font-weight: var(--font-weight-detail-strong);
+}
+
+.searchIcon {
+  color: var(--icon-tertiary);
+}
+
+.countryList {
+  list-style: none;
+  margin: 0 calc(-1 * var(--spacing-size-m));
+  padding: 0;
+  max-height: min(360px, 50vh);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.countryRow {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-size-xl);
+  padding: var(--spacing-size-l) var(--spacing-size-m);
+  border-radius: var(--size-border-radius-action-medium);
+  color: var(--text-primary);
+  font-size: var(--font-size-detail);
+  line-height: var(--line-height-detail);
+}
+
+.countryRow:hover {
+  background: var(--states-background-hovered-transparent);
+}
+
+.countryRow[aria-current] {
+  background: var(--background-tertiary);
+}
+
+.rowCode {
+  color: var(--text-tertiary);
+  white-space: nowrap;
+}
+
+.check {
+  color: var(--icon-themed);
+  flex-shrink: 0;
+}
+
+.noMatch {
+  padding: var(--spacing-size2xl) var(--spacing-size-m);
+  text-align: center;
+  color: var(--text-tertiary);
+  font-size: var(--font-size-description);
+  line-height: var(--line-height-description);
+}

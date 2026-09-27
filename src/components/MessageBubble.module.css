@@ -1,0 +1,105 @@
+.row {
+  --bubble-radius: 18px;
+  --bubble-radius-tight: 6px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  margin-top: var(--spacing-size-m);
+}
+
+.row[data-grouped-prev] {
+  margin-top: var(--spacing-size-xs);
+}
+
+.row[data-out] {
+  align-items: flex-end;
+}
+
+.bubble {
+  position: relative;
+  max-width: min(75%, 560px);
+  padding: 7px var(--spacing-size-xl) 7px;
+  box-sizing: border-box;
+  border-radius: var(--bubble-radius);
+  background: var(--background-card);
+  color: var(--text-primary);
+  font-size: var(--font-size-detail);
+  line-height: var(--line-height-detail);
+}
+
+/* Consecutive bubbles on one side share a flattened corner, like MAX. */
+.row:not([data-out])[data-grouped-prev] .bubble {
+  border-top-left-radius: var(--bubble-radius-tight);
+}
+.row:not([data-out])[data-grouped-next] .bubble {
+  border-bottom-left-radius: var(--bubble-radius-tight);
+}
+.row[data-out][data-grouped-prev] .bubble {
+  border-top-right-radius: var(--bubble-radius-tight);
+}
+.row[data-out][data-grouped-next] .bubble {
+  border-bottom-right-radius: var(--bubble-radius-tight);
+}
+
+.row[data-out] .bubble {
+  background: var(--button-primary);
+  color: var(--text-primary-inverse-static);
+}
+
+.row[data-out] .bubble[data-failed] {
+  background: color-mix(in srgb, var(--button-primary) 55%, var(--background-card));
+}
+
+.sender {
+  font-size: var(--font-size-description);
+  line-height: var(--line-height-description);
+  font-weight: var(--font-weight-description-strong);
+  color: var(--text-themed);
+  margin-bottom: 2px;
+}
+
+.text {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+/* Invisible tail so the last line never runs under the absolutely positioned meta. */
+.spacer {
+  display: inline-block;
+  width: 44px;
+  height: 1px;
+}
+.row[data-out] .spacer {
+  width: 62px;
+}
+
+.meta {
+  position: absolute;
+  right: var(--spacing-size-l);
+  bottom: 5px;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: var(--font-size-tag);
+  line-height: var(--line-height-tag);
+  color: var(--text-tertiary);
+  user-select: none;
+}
+
+.row[data-out] .meta {
+  color: color-mix(in srgb, var(--text-primary-inverse-static) 72%, transparent);
+}
+
+.status {
+  display: inline-flex;
+}
+
+.failed {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-size-m);
+  margin-top: var(--spacing-size-xs);
+  font-size: var(--font-size-description);
+  line-height: var(--line-height-description);
+  color: var(--text-negative);
+}

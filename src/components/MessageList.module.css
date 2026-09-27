@@ -1,0 +1,47 @@
+.scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.inner {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  min-height: 100%;
+  box-sizing: border-box;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: var(--spacing-size-m) var(--spacing-size2xl) var(--spacing-size-xl);
+}
+
+.day {
+  position: sticky;
+  top: var(--spacing-size-m);
+  z-index: 1;
+  display: flex;
+  justify-content: center;
+  margin: var(--spacing-size2xl) 0 var(--spacing-size-xs);
+  pointer-events: none;
+}
+
+.day span {
+  padding: 2px var(--spacing-size-l);
+  border-radius: var(--border-radius-circle);
+  background: var(--background-card);
+  color: var(--text-secondary);
+  font-size: var(--font-size-label);
+  line-height: var(--line-height-label);
+  font-weight: var(--font-weight-label-strong);
+}
+
+.empty {
+  margin: auto;
+  padding: var(--spacing-size-m) var(--spacing-size2xl);
+  border-radius: var(--border-radius-circle);
+  background: var(--background-card);
+  color: var(--text-secondary);
+  font-size: var(--font-size-description);
+  line-height: var(--line-height-description);
+}

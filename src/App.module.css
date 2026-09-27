@@ -1,0 +1,27 @@
+.layout {
+  display: grid;
+  grid-template-columns: minmax(300px, 380px) 1fr;
+  height: 100%;
+  overflow: hidden;
+}
+
+.sidebar,
+.chat {
+  min-height: 0;
+}
+
+/* Narrow screens: one pane at a time, list or chat. */
+@media (max-width: 767px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+
+  .layout[data-chat-open] .sidebar,
+  .layout:not([data-chat-open]) .chat {
+    display: none;
+  }
+
+  .sidebar {
+    border-right: none;
+  }
+}
