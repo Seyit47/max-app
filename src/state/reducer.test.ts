@@ -54,11 +54,11 @@ describe('reducer: RECEIVE', () => {
 
   it('keeps an existing chat title', () => {
     const s = run(
-      { type: 'OPEN_CHAT', chatId: '100', title: '+79991234567' },
+      { type: 'OPEN_CHAT', chatId: '100', title: 'Alice from contacts' },
       { type: 'OPEN_CHAT', chatId: null },
       { type: 'RECEIVE', message: incoming({ chatTitle: 'Alice' }) },
     )
-    expect(s.chats['100'].title).toBe('+79991234567')
+    expect(s.chats['100'].title).toBe('Alice from contacts')
     expect(s.chats['100'].unread).toBe(1)
   })
 })
@@ -204,5 +204,34 @@ describe('reducer: delivery status', () => {
     const retried = reducer(failed, { type: 'SEND_START', chatId: '100', tempId: 'm1', text: 't1', timestamp: 9 })
     expect(retried.messages['100'][0].status).toBe('sending')
     expect(retried.messages['100'][0].error).toBeUndefined()
+  })
+})
+
+describe('reducer: chat titles', () => {
+  it('OPEN_CHAT keeps the phone number on the chat', () => {
+    const s = run({ type: 'OPEN_CHAT', chatId: '100', title: 'Alice', phone: '79991234567', now: 1 })
+    expect(s.chats['100']).toMatchObject({ title: 'Alice', phone: '79991234567' })
+  })
+
+  it('replaces a phone-number title with the sender name when they write', () => {
+    const s = run(
+      { type: 'OPEN_CHAT', chatId: '100', title: '+79991234567', phone: '79991234567', now: 1 },
+      { type: 'RECEIVE', message: incoming({ chatTitle: 'Alice Smith' }) },
+    )
+    expect(s.chats['100']).toMatchObject({ title: 'Alice Smith', phone: '79991234567' })
+  })
+
+  it('keeps a real name, and ignores a sender name that is just the chat id', () => {
+    const named = run(
+      { type: 'OPEN_CHAT', chatId: '100', title: 'Alice (work)', now: 1 },
+      { type: 'RECEIVE', message: incoming({ chatTitle: 'Alice Smith' }) },
+    )
+    expect(named.chats['100'].title).toBe('Alice (work)')
+
+    const noName = run(
+      { type: 'OPEN_CHAT', chatId: '100', title: '+79991234567', now: 1 },
+      { type: 'RECEIVE', message: incoming({ chatTitle: '100' }) },
+    )
+    expect(noName.chats['100'].title).toBe('+79991234567')
   })
 })

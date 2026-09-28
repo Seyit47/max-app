@@ -19,6 +19,9 @@ import styles from './NewChatForm.module.css'
 
 const OWN_NUMBER_ERROR = 'This is your own number: the MAX account this instance is signed in with. Enter someone else’s number.'
 
+// Don't hold the dialog open long for a name; the phone number is an acceptable title.
+const CONTACT_LOOKUP_TIMEOUT_MS = 5_000
+
 // GREEN-API documents checkAccount for these calling codes only.
 const CHECK_ACCOUNT_DOCUMENTED = new Set(['7', '375'])
 
@@ -91,7 +94,7 @@ export function NewChatForm({ onDone, onCancel }: { onDone: () => void; onCancel
 
     // Already have a chat titled with this number: just open it, no need to spend a lookup.
     const title = formatPhoneTitle(digits)
-    const known = Object.values(state.chats).find((c) => c.title === title)
+    const known = Object.values(state.chats).find((c) => c.phone === digits || c.title === title)
     if (known) {
       dispatch({ type: 'OPEN_CHAT', chatId: known.id })
       onDone()
@@ -109,7 +112,12 @@ export function NewChatForm({ onDone, onCancel }: { onDone: () => void; onCancel
         return
       }
       if (exist && chatId) {
-        dispatch({ type: 'OPEN_CHAT', chatId: String(chatId), title })
+        // Prefer the name saved in contacts, then the MAX profile name, then the number.
+        const info = await client
+          .getContactInfo(String(chatId), AbortSignal.timeout(CONTACT_LOOKUP_TIMEOUT_MS))
+          .catch(() => null)
+        const name = info?.contactName?.trim() || info?.name?.trim()
+        dispatch({ type: 'OPEN_CHAT', chatId: String(chatId), title: name || title, phone: digits })
         onDone()
         return
       }

@@ -33,6 +33,8 @@ export interface IncomingMessage extends Message {
 export interface Chat {
   id: string
   title: string
+  /** International digits, when the chat was started by phone number. */
+  phone?: string
   unread: number
   /** Unix ms of the last message or of creation; drives list order. */
   lastActivity: number
@@ -66,7 +68,7 @@ export type Action =
   | { type: 'LOGIN'; credentials: Credentials; me?: Account | null }
   | { type: 'ACCOUNT'; me: Account }
   | { type: 'LOGOUT'; reason?: string }
-  | { type: 'OPEN_CHAT'; chatId: string | null; title?: string; now?: number }
+  | { type: 'OPEN_CHAT'; chatId: string | null; title?: string; phone?: string; now?: number }
   | { type: 'SEND_START'; chatId: string; tempId: string; text: string; timestamp: number }
   | { type: 'SEND_OK'; chatId: string; tempId: string; idMessage: string }
   | { type: 'SEND_FAIL'; chatId: string; tempId: string }
@@ -107,6 +109,7 @@ export function reducer(state: State, action: Action): State {
         : {
             id: chatId,
             title: action.title || chatId,
+            ...(action.phone ? { phone: action.phone } : {}),
             unread: 0,
             lastActivity: action.now ?? Date.now(),
           }
@@ -181,9 +184,12 @@ export function reducer(state: State, action: Action): State {
 
       const isOpen = state.activeChatId === message.chatId
       const prev = state.chats[message.chatId]
+      // A chat titled with a bare phone number (no name was found) takes the sender's name.
+      const betterTitle = prev && /^\+\d+$/.test(prev.title) && chatTitle && chatTitle !== message.chatId
       const chat: Chat = prev
         ? {
             ...prev,
+            ...(betterTitle ? { title: chatTitle } : {}),
             unread: isOpen ? 0 : prev.unread + 1,
             lastActivity: Math.max(prev.lastActivity, message.timestamp),
           }

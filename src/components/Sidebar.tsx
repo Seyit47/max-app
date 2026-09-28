@@ -54,8 +54,8 @@ export function Sidebar({ className }: { className?: string }) {
       <ChatList query={query} onNewChat={() => setNewChatOpen(true)} />
 
       <footer className={styles.footer}>
-        <span className={styles.instance} title="Signed-in MAX account and GREEN-API instance">
-          {state.me?.phone ? `+${state.me.phone} · ` : ''}Instance {state.credentials?.idInstance}
+        <span className={styles.instance} title="GREEN-API instance">
+          Instance {state.credentials?.idInstance}
         </span>
         <Button
           size="small"

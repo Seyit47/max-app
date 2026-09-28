@@ -35,6 +35,16 @@ export interface SendMessageResponse {
   idMessage: string
 }
 
+export interface ContactInfoResponse {
+  /** Name from the person's MAX profile; empty if unknown. */
+  name?: string
+  /** Name as saved in the account's contacts; empty if not saved. */
+  contactName?: string
+  chatId?: string
+  avatar?: string
+  phoneNumber?: number
+}
+
 export interface ReadChatResponse {
   setRead: boolean
 }

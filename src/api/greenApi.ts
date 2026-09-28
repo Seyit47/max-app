@@ -1,6 +1,7 @@
 import type {
   AccountSettingsResponse,
   CheckAccountResponse,
+  ContactInfoResponse,
   Credentials,
   DeleteNotificationResponse,
   ReadChatResponse,
@@ -127,6 +128,12 @@ export function createClient(creds: Credentials) {
       })
       if (!data) throw new GreenApiError(0, 'Empty response from checkAccount')
       return data
+    },
+
+    /** Name and avatar of a one-to-one chat's contact. Not for groups. */
+    async getContactInfo(chatId: string, signal?: AbortSignal): Promise<ContactInfoResponse> {
+      const data = await request<ContactInfoResponse>('getContactInfo', 'POST', { body: { chatId }, signal })
+      return data ?? {}
     },
 
     async sendMessage(chatId: string, message: string, signal?: AbortSignal): Promise<SendMessageResponse> {

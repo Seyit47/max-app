@@ -9,7 +9,10 @@ export function ChatList({ query, onNewChat }: { query: string; onNewChat: () =>
   const { state, dispatch } = useStore()
   const all = sortedChats(state)
   const q = query.trim().toLowerCase()
-  const chats = q ? all.filter((c) => c.title.toLowerCase().includes(q)) : all
+  const qDigits = q.replace(/\D+/g, '')
+  const chats = q
+    ? all.filter((c) => c.title.toLowerCase().includes(q) || (qDigits.length > 0 && c.phone?.includes(qDigits)))
+    : all
 
   if (all.length === 0) {
     return (
