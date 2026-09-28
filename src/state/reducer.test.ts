@@ -146,3 +146,63 @@ describe('reducer: session', () => {
     expect(sortedChats(s).map((c) => c.id)).toEqual(['2', '3', '1'])
   })
 })
+
+describe('reducer: delivery status', () => {
+  const sent = (tempId: string, idMessage: string, timestamp: number): Action[] => [
+    { type: 'SEND_START', chatId: '100', tempId, text: tempId, timestamp },
+    { type: 'SEND_OK', chatId: '100', tempId, idMessage },
+  ]
+  const status = (idMessage: string, s: 'delivered' | 'read' | 'failed', error?: string): Action => ({
+    type: 'STATUS',
+    update: { chatId: '100', idMessage, status: s, error },
+  })
+  const statuses = (s: State) => s.messages['100'].map((m) => m.status)
+
+  it('moves a sent message to delivered, then read', () => {
+    const delivered = run(...sent('t1', 'm1', 1), status('m1', 'delivered'))
+    expect(statuses(delivered)).toEqual(['delivered'])
+    expect(statuses(reducer(delivered, status('m1', 'read')))).toEqual(['read'])
+  })
+
+  it('never downgrades a status', () => {
+    const s = run(...sent('t1', 'm1', 1), status('m1', 'read'), status('m1', 'delivered'))
+    expect(statuses(s)).toEqual(['read'])
+  })
+
+  it('marks earlier outgoing messages read too, but not ones still sending or failed', () => {
+    const s = run(
+      ...sent('t1', 'm1', 1),
+      ...sent('t2', 'm2', 2),
+      { type: 'SEND_START', chatId: '100', tempId: 't3', text: 'x', timestamp: 3 },
+      { type: 'SEND_START', chatId: '100', tempId: 't4', text: 'y', timestamp: 4 },
+      { type: 'SEND_FAIL', chatId: '100', tempId: 't4' },
+      ...sent('t5', 'm5', 5),
+      status('m5', 'read'),
+    )
+    expect(statuses(s)).toEqual(['read', 'read', 'sending', 'failed', 'read'])
+  })
+
+  it('applies a status that arrives before sendMessage returned the id', () => {
+    const s = run(
+      { type: 'SEND_START', chatId: '100', tempId: 't1', text: 'hi', timestamp: 1 },
+      status('m1', 'delivered'),
+      { type: 'SEND_OK', chatId: '100', tempId: 't1', idMessage: 'm1' },
+    )
+    expect(s.messages['100'][0]).toMatchObject({ id: 'm1', status: 'delivered' })
+    expect(s.pendingStatuses).toEqual({})
+  })
+
+  it('drops statuses for messages it does not know and is not waiting on', () => {
+    const s = run(...sent('t1', 'm1', 1))
+    expect(reducer(s, status('other', 'read'))).toBe(s)
+  })
+
+  it('marks a message failed with the reason, and a retry clears it', () => {
+    const failed = run(...sent('t1', 'm1', 1), status('m1', 'failed', 'This number is not registered in MAX'))
+    expect(failed.messages['100'][0]).toMatchObject({ status: 'failed', error: 'This number is not registered in MAX' })
+
+    const retried = reducer(failed, { type: 'SEND_START', chatId: '100', tempId: 'm1', text: 't1', timestamp: 9 })
+    expect(retried.messages['100'][0].status).toBe('sending')
+    expect(retried.messages['100'][0].error).toBeUndefined()
+  })
+})

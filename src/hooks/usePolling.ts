@@ -1,6 +1,6 @@
 import { useEffect, type Dispatch } from 'react'
 import { GreenApiError, type GreenApiClient } from '../api/greenApi'
-import { parseNotification } from '../state/parseNotification'
+import { parseNotification, parseStatus } from '../state/parseNotification'
 import type { Action } from '../state/reducer'
 
 const RECEIVE_TIMEOUT_S = 20
@@ -35,6 +35,8 @@ export function usePolling(client: GreenApiClient | null, dispatch: Dispatch<Act
           try {
             const message = parseNotification(notification.body)
             if (message) dispatch({ type: 'RECEIVE', message })
+            const update = parseStatus(notification.body)
+            if (update) dispatch({ type: 'STATUS', update })
           } finally {
             // If this throws, the outer catch backs off and the notification is redelivered;
             // the reducer dedupes it by id.

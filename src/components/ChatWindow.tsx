@@ -1,8 +1,9 @@
 import { IconButton, Typography } from '@maxhub/max-ui'
 import { useCallback } from 'react'
+import { useMarkRead } from '../hooks/useMarkRead'
 import { useSendMessage } from '../hooks/useSendMessage'
 import type { Message } from '../state/reducer'
-import { useStore } from '../state/store'
+import { useClient, useStore } from '../state/store'
 import { ChatAvatar } from './ChatAvatar'
 import styles from './ChatWindow.module.css'
 import { Composer } from './Composer'
@@ -18,6 +19,8 @@ export function ChatWindow({ className }: { className?: string }) {
   const messages = (chat && state.messages[chat.id]) || EMPTY
 
   const onRetry = useCallback((m: Message) => void send(m.chatId, m.text, m.id), [send])
+  const lastIncoming = messages.findLast((m) => m.direction === 'in')
+  useMarkRead(useClient(), chat?.id ?? '', lastIncoming?.id)
 
   if (!chat) {
     return (

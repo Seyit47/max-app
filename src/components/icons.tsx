@@ -48,6 +48,13 @@ export const CheckIcon = (p: IconProps) => (
   </Svg>
 )
 
+export const DoubleCheckIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <path d="m2 12.5 5 5L18 6.5" />
+    <path d="m13 16.5 1 1L24 6.5" />
+  </Svg>
+)
+
 export const ClockIcon = (p: IconProps) => (
   <Svg {...p}>
     <circle cx="12" cy="12" r="9" />

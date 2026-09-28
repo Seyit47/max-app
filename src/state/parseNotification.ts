@@ -1,5 +1,5 @@
 import type { NotificationBody } from '../api/types'
-import type { IncomingMessage } from './reducer'
+import type { IncomingMessage, StatusUpdate } from './reducer'
 
 /**
  * Maps a queued notification to an incoming message, or null for anything we don't display.
@@ -41,5 +41,34 @@ function extractText(data: NonNullable<NotificationBody['messageData']>): string
       return data.extendedTextMessageData?.text ?? ''
     default:
       return `[${data.typeMessage || 'unknownMessage'}]`
+  }
+}
+
+const FAILURE_REASONS: Record<string, string> = {
+  noAccount: 'This number is not registered in MAX',
+  notInGroup: 'You are not a member of this group',
+}
+
+/** Maps an outgoingMessageStatus notification to a status change, or null for anything else. */
+export function parseStatus(body: NotificationBody | null | undefined): StatusUpdate | null {
+  if (!body || body.typeWebhook !== 'outgoingMessageStatus') return null
+  const { chatId, idMessage, status, description } = body
+  if (typeof idMessage !== 'string' || !idMessage || chatId === undefined || chatId === null) return null
+  const base = { chatId: String(chatId), idMessage }
+
+  switch (status) {
+    case 'delivered':
+    case 'read':
+      return { ...base, status }
+    case 'failed':
+    case 'noAccount':
+    case 'notInGroup': {
+      const error =
+        FAILURE_REASONS[status] ??
+        (typeof description === 'string' && description ? description : 'MAX could not deliver the message')
+      return { ...base, status: 'failed', error }
+    }
+    default:
+      return null
   }
 }

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { NotificationBody } from '../api/types'
-import { parseNotification } from './parseNotification'
+import { parseNotification, parseStatus } from './parseNotification'
 
 function incoming(messageData: NotificationBody['messageData'], senderData?: Partial<NotificationBody['senderData']>): NotificationBody {
   return {
@@ -93,5 +93,33 @@ describe('parseNotification', () => {
       ),
     )
     expect(noNames?.chatTitle).toBe('10000000')
+  })
+})
+
+describe('parseStatus', () => {
+  const status = (status: string, extra: Record<string, unknown> = {}): NotificationBody => ({
+    typeWebhook: 'outgoingMessageStatus',
+    chatId: '10000000',
+    timestamp: 1755591519,
+    idMessage: '115054445839974415',
+    status,
+    ...extra,
+  })
+
+  it('parses delivered and read', () => {
+    expect(parseStatus(status('delivered'))).toEqual({ chatId: '10000000', idMessage: '115054445839974415', status: 'delivered' })
+    expect(parseStatus(status('read'))?.status).toBe('read')
+  })
+
+  it('maps the failure statuses to failed with a readable reason', () => {
+    expect(parseStatus(status('noAccount'))).toMatchObject({ status: 'failed', error: 'This number is not registered in MAX' })
+    expect(parseStatus(status('notInGroup'))).toMatchObject({ status: 'failed', error: 'You are not a member of this group' })
+    expect(parseStatus(status('failed', { description: 'MAX server error' }))).toMatchObject({ status: 'failed', error: 'MAX server error' })
+  })
+
+  it('ignores other notifications and unknown statuses', () => {
+    expect(parseStatus({ typeWebhook: 'incomingMessageReceived', idMessage: '1' })).toBeNull()
+    expect(parseStatus(status('sent'))).toBeNull()
+    expect(parseStatus(status('read', { idMessage: undefined }))).toBeNull()
   })
 })

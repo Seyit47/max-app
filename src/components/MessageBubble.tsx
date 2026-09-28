@@ -2,7 +2,7 @@ import { Button } from '@maxhub/max-ui'
 import { memo } from 'react'
 import type { Message } from '../state/reducer'
 import { formatTime } from '../utils/time'
-import { AlertIcon, CheckIcon, ClockIcon } from './icons'
+import { AlertIcon, CheckIcon, ClockIcon, DoubleCheckIcon } from './icons'
 import styles from './MessageBubble.module.css'
 
 interface Props {
@@ -14,7 +14,7 @@ interface Props {
   onRetry: (message: Message) => void
 }
 
-const STATUS_LABEL = { sending: 'Sending', sent: 'Sent', failed: 'Not sent' } as const
+const STATUS_LABEL = { sending: 'Sending', sent: 'Sent', delivered: 'Delivered', read: 'Read', failed: 'Not sent' } as const
 
 export const MessageBubble = memo(function MessageBubble({
   message,
@@ -44,7 +44,9 @@ export const MessageBubble = memo(function MessageBubble({
           {out && message.status && (
             <span className={styles.status} title={STATUS_LABEL[message.status]} aria-label={STATUS_LABEL[message.status]}>
               {message.status === 'sending' && <ClockIcon size={14} />}
-              {message.status === 'sent' && <CheckIcon size={14} strokeWidth={2.5} />}
+              {/* As in MAX: one check until the recipient reads it, two once read. */}
+              {(message.status === 'sent' || message.status === 'delivered') && <CheckIcon size={14} strokeWidth={2.5} />}
+              {message.status === 'read' && <DoubleCheckIcon size={16} strokeWidth={2.5} />}
               {message.status === 'failed' && <AlertIcon size={14} strokeWidth={2.5} />}
             </span>
           )}
@@ -52,7 +54,7 @@ export const MessageBubble = memo(function MessageBubble({
       </div>
       {message.status === 'failed' && (
         <div className={styles.failed}>
-          <span>Not sent</span>
+          <span>{message.error ? `Not sent: ${message.error}` : 'Not sent'}</span>
           <Button size="xsmall" variant="secondary" onClick={() => onRetry(message)}>
             Retry
           </Button>

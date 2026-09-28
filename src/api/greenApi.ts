@@ -3,6 +3,7 @@ import type {
   CheckAccountResponse,
   Credentials,
   DeleteNotificationResponse,
+  ReadChatResponse,
   ReceivedNotification,
   SendMessageResponse,
   StateInstanceResponse,
@@ -135,6 +136,15 @@ export function createClient(creds: Credentials) {
       })
       if (!data?.idMessage) throw new GreenApiError(0, 'Empty response from sendMessage')
       return data
+    },
+
+    /** Marks messages in a chat read: idMessage and everything before it, or the whole chat if omitted. */
+    async readChat(chatId: string, idMessage?: string, signal?: AbortSignal): Promise<ReadChatResponse> {
+      const data = await request<ReadChatResponse>('readChat', 'POST', {
+        body: idMessage ? { chatId, idMessage } : { chatId },
+        signal,
+      })
+      return data ?? { setRead: false }
     },
 
     /** Long-polls the queue. Resolves to null when the timeout elapses with nothing queued. */

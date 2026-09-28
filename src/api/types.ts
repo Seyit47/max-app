@@ -35,6 +35,10 @@ export interface SendMessageResponse {
   idMessage: string
 }
 
+export interface ReadChatResponse {
+  setRead: boolean
+}
+
 export interface DeleteNotificationResponse {
   result: boolean
   reason?: string

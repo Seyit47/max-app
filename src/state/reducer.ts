@@ -1,6 +1,6 @@
 import type { Credentials } from '../api/types'
 
-export type MessageStatus = 'sending' | 'sent' | 'failed'
+export type MessageStatus = 'sending' | 'sent' | 'delivered' | 'read' | 'failed'
 
 export interface Message {
   id: string
@@ -11,7 +11,17 @@ export interface Message {
   direction: 'in' | 'out'
   /** Outgoing only */
   status?: MessageStatus
+  /** Why a sent message failed, when MAX said so (e.g. "not registered in MAX"). */
+  error?: string
   senderName?: string
+}
+
+/** From an outgoingMessageStatus notification. */
+export interface StatusUpdate {
+  chatId: string
+  idMessage: string
+  status: 'delivered' | 'read' | 'failed'
+  error?: string
 }
 
 export interface IncomingMessage extends Message {
@@ -48,6 +58,8 @@ export interface State {
   connectionError: string | null
   /** Shown on the login page after a forced logout. */
   logoutReason: string | null
+  /** Statuses that arrived before sendMessage returned their id, keyed by idMessage. */
+  pendingStatuses: Record<string, StatusUpdate>
 }
 
 export type Action =
@@ -59,6 +71,7 @@ export type Action =
   | { type: 'SEND_OK'; chatId: string; tempId: string; idMessage: string }
   | { type: 'SEND_FAIL'; chatId: string; tempId: string }
   | { type: 'RECEIVE'; message: IncomingMessage }
+  | { type: 'STATUS'; update: StatusUpdate }
   | { type: 'CONNECTION'; status: ConnectionStatus; error?: string | null }
 
 export const initialState: State = {
@@ -70,6 +83,7 @@ export const initialState: State = {
   connection: 'connecting',
   connectionError: null,
   logoutReason: null,
+  pendingStatuses: {},
 }
 
 export function reducer(state: State, action: Action): State {
@@ -110,7 +124,11 @@ export function reducer(state: State, action: Action): State {
 
       // Retry reuses the temp id: flip the failed message back to sending in place.
       if (list.some((m) => m.id === tempId)) {
-        return updateMessage(state, chatId, tempId, (m) => ({ ...m, status: 'sending' }))
+        return updateMessage(state, chatId, tempId, (m) => {
+          const retried: Message = { ...m, status: 'sending' }
+          delete retried.error
+          return retried
+        })
       }
 
       const message: Message = { id: tempId, chatId, text, timestamp, direction: 'out', status: 'sending' }
@@ -130,11 +148,26 @@ export function reducer(state: State, action: Action): State {
           messages: { ...state.messages, [action.chatId]: list.filter((m) => m.id !== action.tempId) },
         }
       }
-      return updateMessage(state, action.chatId, action.tempId, (m) => ({
+      const sent = updateMessage(state, action.chatId, action.tempId, (m) => ({
         ...m,
         id: action.idMessage,
         status: 'sent',
       }))
+      const pending = state.pendingStatuses[action.idMessage]
+      if (!pending) return sent
+      const rest = { ...state.pendingStatuses }
+      delete rest[action.idMessage]
+      return applyStatus({ ...sent, pendingStatuses: rest }, pending)
+    }
+
+    case 'STATUS': {
+      const { chatId, idMessage } = action.update
+      const list = state.messages[chatId] ?? []
+      if (list.some((m) => m.id === idMessage && m.direction === 'out')) return applyStatus(state, action.update)
+      // The notification can beat the sendMessage response; hold it until SEND_OK brings the id.
+      // Anything else (e.g. messages sent from the phone) isn't shown here, so drop it.
+      if (!list.some((m) => m.status === 'sending')) return state
+      return { ...state, pendingStatuses: { ...state.pendingStatuses, [idMessage]: action.update } }
     }
 
     case 'SEND_FAIL':
@@ -182,6 +215,39 @@ function updateMessage(state: State, chatId: string, id: string, fn: (m: Message
   const next = list.slice()
   next[idx] = fn(list[idx])
   return { ...state, messages: { ...state.messages, [chatId]: next } }
+}
+
+const STATUS_RANK: Partial<Record<MessageStatus, number>> = { sent: 1, delivered: 2, read: 3 }
+
+/**
+ * Moves outgoing statuses forward only. Delivered/read also covers earlier sent messages in the
+ * chat (reading the latest implies the rest); messages still sending or failed are left alone.
+ */
+function applyStatus(state: State, update: StatusUpdate): State {
+  const list = state.messages[update.chatId]
+  const idx = list?.findIndex((m) => m.id === update.idMessage && m.direction === 'out') ?? -1
+  if (!list || idx === -1) return state
+
+  const next = list.slice()
+  let changed = false
+
+  if (update.status === 'failed') {
+    const m = list[idx]
+    if ((STATUS_RANK[m.status!] ?? 0) >= STATUS_RANK.delivered!) return state
+    next[idx] = { ...m, status: 'failed', ...(update.error ? { error: update.error } : {}) }
+    changed = true
+  } else {
+    const rank = STATUS_RANK[update.status]!
+    for (let i = 0; i <= idx; i++) {
+      const m = list[i]
+      const current = STATUS_RANK[m.status!]
+      if (m.direction !== 'out' || current === undefined || current >= rank) continue
+      next[i] = { ...m, status: update.status }
+      changed = true
+    }
+  }
+
+  return changed ? { ...state, messages: { ...state.messages, [update.chatId]: next } } : state
 }
 
 export function sortedChats(state: State): Chat[] {
